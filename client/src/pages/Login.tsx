@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import {Link,  Navigate, useNavigate } from "react-router-dom";
 import { supabase } from "../lib/supabase.ts";
 import { useAuth } from "../context/AuthContext";
+
 
 type Mode = "farmer" | "buyer";
 
@@ -123,6 +124,10 @@ export default function Login() {
                   value={password} onChange={(e) => setPassword(e.target.value)} required />
               </div>
               <button className={primary} disabled={busy}>{busy ? "Signing in…" : "Sign in"}</button>
+              <p className="text-center text-sm">
+                New buyer? 
+              <Link to="/register/buyer" className="underline underline-offset-4">Create an account</Link>
+              </p>
             </form>
           )}
 

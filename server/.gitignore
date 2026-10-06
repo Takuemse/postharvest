@@ -6,7 +6,9 @@ dist
 /generated/prisma
 ,
 # Prisma tooling and AI agents
+generated
 .agents/
 .claude/
 .windsurf/
 skills-lock.json
+

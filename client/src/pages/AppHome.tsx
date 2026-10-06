@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../lib/api.ts";
+
 import { useAuth } from "../context/AuthContext";
 
 export default function AppHome() {
@@ -9,6 +10,7 @@ export default function AppHome() {
 
   useEffect(() => {
     api("/api/auth/me").then(setMe).catch((e: Error) => setError(e.message));
+   
   }, []);
 
   return (
