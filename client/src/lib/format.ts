@@ -30,3 +30,16 @@ export function daysAgoInHarare(n: number) {
 // Today as YYYY-MM-DD in Zimbabwe time.
 export const todayInHarare = () =>
   new Date().toLocaleDateString("en-CA", { timeZone: "Africa/Harare" });
+
+export function daysFromNowInHarare(n: number) {
+  const d = new Date(`${todayInHarare()}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
+
+export function neededByText(days: number) {
+  if (days < 0) return days === -1 ? "Overdue by 1 day" : `Overdue by ${-days} days`;
+  if (days === 0) return "Needed today";
+  if (days === 1) return "Needed tomorrow";
+  return `Needed in ${days} days`;
+}

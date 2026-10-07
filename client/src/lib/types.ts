@@ -24,3 +24,28 @@ export type Harvest = {
 };
 
 export type Crop = { id: number; name: string; shelfLives: { storage: Storage; days: number }[] };
+
+export type DemandState = "OPEN" | "PARTLY_FULFILLED" | "FULFILLED" | "OVERDUE" | "CLOSED" | "CANCELLED";
+
+export type Demand = {
+  id: string;
+  business: { id: string; name: string };
+  crop: { id: number; name: string };
+  location: { id: number; name: string; province: string };
+  quantityKg: number;
+  fulfilledKg: number;
+  remainingKg: number;
+  neededBy: string;
+  daysUntilNeeded: number;
+  state: DemandState;
+  maxPricePerKg: number | null;
+  currency: "USD" | "ZWG";
+  notes: string | null;
+};
+
+export type Business = {
+  id: string;
+  name: string;
+  type: string;
+  location: { id: number; name: string; province: string };
+};

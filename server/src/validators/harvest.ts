@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const quantityKg = z.coerce
+export const quantityKg = z.coerce
   .number({ message: "Enter the quantity in kg." })
   .positive("Quantity must be more than 0 kg.")
   .max(100000, "That quantity looks too large. Please check it.")
