@@ -8,6 +8,7 @@ import { authRouter } from "./routes/auth";
 import { harvestRouter } from "./routes/harvests";
 import { demandRouter } from "./routes/demands";
 import { businessRouter } from "./routes/businesses"
+import { matchRouter } from "./routes/matches";
 import { errorHandler } from "./middleware/error";
 
 
@@ -24,7 +25,10 @@ app.use("/api/auth", authRouter);
 app.use("/api/harvests", harvestRouter);
 
 app.use("/api/demands", demandRouter);
+
 app.use("/api/businesses", businessRouter);
+
+app.use("/api/matches", matchRouter);
 
 // ...after the 404 handler, at the very end:
 app.use(errorHandler);

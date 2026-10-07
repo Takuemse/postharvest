@@ -49,3 +49,37 @@ export type Business = {
   type: string;
   location: { id: number; name: string; province: string };
 };
+
+export type Fit = "STRONG" | "GOOD" | "POSSIBLE";
+
+type Delivery = { date: string; transitDays: number };
+
+export type FarmerMatch = {
+  demandId: string;
+  buyer: { name: string; type: string; town: string };
+  requestedKg: number;
+  neededBy: string;
+  matchedKg: number;
+  score: number;
+  fit: Fit;
+  coversAll: boolean;
+  delivery: Delivery;
+  daysLeftAtDelivery: number;
+  reasons: string[];
+};
+
+export type BuyerMatch = {
+  harvestId: string;
+  farm: { name: string; town: string };
+  availableKg: number;
+  harvestDate: string;
+  storage: Storage;
+  asking: { pricePerKg: number; currency: "USD" | "ZWG" } | null;
+  matchedKg: number;
+  score: number;
+  fit: Fit;
+  coversAll: boolean;
+  delivery: Delivery;
+  daysLeftAtDelivery: number;
+  reasons: string[];
+};

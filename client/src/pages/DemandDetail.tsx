@@ -5,6 +5,7 @@ import { DemandBadge } from "../components/DemandBadge";
 import { useDemand } from "../hooks/useDemands";
 import { api, describeError } from "../lib/api";
 import { kg, neededByText } from "../lib/format";
+import { DemandMatches } from "../components/Matches";
 
 export default function DemandDetail() {
   const { id } = useParams();
@@ -80,7 +81,9 @@ export default function DemandDetail() {
             <dd className="text-base">{d.notes}</dd>
           </div>
         )}
+       
       </dl>
+       {open && <DemandMatches demandId={d.id} />}P89
 
       {open && (
         <div className="mt-10 max-w-xl">

@@ -5,6 +5,7 @@ import { UrgencyBadge } from "../components/UrgencyBadge";
 import { useHarvest } from "../hooks/useHarvest";
 import { api, describeError } from "../lib/api";
 import { daysLeftText, harvestedText, kg, STORAGE_LABEL } from "../lib/format";
+import { HarvestMatches } from "../components/Matches"
 
 export default function HarvestDetail() {
   const { id } = useParams();
@@ -108,8 +109,9 @@ export default function HarvestDetail() {
             <dd className="text-base">{h.notes}</dd>
           </div>
         )}
+       
       </dl>
-
+      {h.stockState !== "SOLD_OUT" && <HarvestMatches harvestId={h.id} />}
       <div className="mt-10 flex max-w-xl flex-wrap items-center gap-4">
         <Link
           to={`/harvests/${h.id}/edit`}

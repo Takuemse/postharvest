@@ -43,3 +43,8 @@ export function neededByText(days: number) {
   if (days === 1) return "Needed tomorrow";
   return `Needed in ${days} days`;
 }
+
+export const formatDay = (iso: string) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString("en-GB", {
+    weekday: "short", day: "numeric", month: "short", timeZone: "UTC",
+  });
