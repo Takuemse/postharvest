@@ -1,25 +1,14 @@
-import { useEffect, useState } from "react";
-import { api } from "../lib/api.ts";
-
+import { AppShell } from "../components/AppShell";
 import { useAuth } from "../context/AuthContext";
+import FarmerDashboard from "./FarmerDashboard";
 
 export default function AppHome() {
-  const { signOut } = useAuth();
-  const [me, setMe] = useState<unknown>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    api("/api/auth/me").then(setMe).catch((e: Error) => setError(e.message));
-   
-  }, []);
-
+  const { role } = useAuth();
+  if (role === "FARMER") return <FarmerDashboard />;
   return (
-    <main className="mx-auto max-w-xl p-8">
-      <h1 className="font-display text-3xl">Signed in</h1>
-      <pre className="mt-6 overflow-x-auto rounded-xl border border-line bg-white/60 p-4 text-sm">
-        {error ?? JSON.stringify(me, null, 2)}
-      </pre>
-      <button onClick={signOut} className="mt-6 text-sm underline underline-offset-4">Sign out</button>
-    </main>
+    <AppShell>
+      <h1 className="font-display text-4xl font-medium">Your dashboard is on the way.</h1>
+      <p className="mt-3 max-w-md text-lg text-ink/70">The buyer experience is the next thing we build.</p>
+    </AppShell>
   );
 }

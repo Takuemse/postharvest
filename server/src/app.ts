@@ -5,6 +5,7 @@ import { env } from "./config/env";
 import { requireAuth } from "./middleware/auth";
 import { referenceRouter } from "./routes/reference";
 import { authRouter } from "./routes/auth";
+import { harvestRouter } from "./routes/harvests";
 import { errorHandler } from "./middleware/error";
 
 
@@ -17,6 +18,8 @@ app.use(express.json());
 app.use("/api/reference", referenceRouter);
 
 app.use("/api/auth", authRouter);
+
+app.use("/api/harvests", harvestRouter);
 
 // ...after the 404 handler, at the very end:
 app.use(errorHandler);
