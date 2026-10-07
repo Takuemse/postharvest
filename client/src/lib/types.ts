@@ -9,14 +9,18 @@ export type Harvest = {
   harvestDate: string;
   storage: Storage;
   quantityKg: number;
+  reservedKg: number;
+  soldKg: number;
   availableKg: number;
   stockState: StockState;
+  shelfLifeDays: number | null;
   urgency: Urgency | null;
   ageDays: number | null;
   daysRemaining: number | null;
   pastShelfLife: boolean;
   askingPricePerKg: number | null;
   currency: "USD" | "ZWG";
+  notes: string | null;
 };
 
 export type Crop = { id: number; name: string; shelfLives: { storage: Storage; days: number }[] };

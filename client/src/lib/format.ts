@@ -8,9 +8,10 @@ export const STORAGE_LABEL: Record<Storage, string> = {
 
 export const kg = (n: number) => `${n.toLocaleString("en-US", { maximumFractionDigits: 2 })} kg`;
 
-export function daysLeftText(daysRemaining: number | null, past: boolean) {
+export function daysLeftText(daysRemaining: number | null) {
   if (daysRemaining === null) return "Shelf life unknown";
-  if (past || daysRemaining <= 0) return "Past its estimated shelf life";
+  if (daysRemaining < 0) return "Past its estimated shelf life";
+  if (daysRemaining === 0) return "Last day";
   return daysRemaining === 1 ? "1 day left" : `${daysRemaining} days left`;
 }
 

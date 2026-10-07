@@ -2,7 +2,7 @@ import { Prisma } from "../../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { AppError } from "../middleware/error";
 import { computeUrgency, stockState, todayInHarare } from "../utils/harvestStatus";
-import type { CreateHarvestInput } from "../validators/harvest";
+import type { CreateHarvestInput, UpdateHarvestInput } from "../validators/harvest";
 
 const include = {
   crop: { include: { shelfLives: true } },
@@ -54,6 +54,21 @@ export function present(h: HarvestRow, today = todayInHarare()) {
   };
 }
 
+function parseDay(value: string): Date {
+  const d = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(d.getTime())) throw new AppError(422, "Choose a valid harvest date.");
+  return d;
+}
+
+function assertHarvestDate(harvestDate: Date, shelfDays: number) {
+  const today = todayInHarare();
+  if (harvestDate > today) throw new AppError(422, "The harvest date cannot be in the future.");
+  const ageDays = Math.floor((today.getTime() - harvestDate.getTime()) / 86_400_000);
+  if (ageDays > shelfDays + 30) {
+    throw new AppError(422, "That harvest date looks too far back. Please check the date.");
+  }
+}
+
 export async function createHarvest(ownerId: string, input: CreateHarvestInput) {
   const farms = await prisma.farm.findMany({ where: { ownerId } });
   const farm = input.farmId
@@ -70,18 +85,13 @@ export async function createHarvest(ownerId: string, input: CreateHarvestInput) 
     include: { shelfLives: true },
   });
   if (!crop) throw new AppError(422, "That crop is not available.");
-const shelf = crop.shelfLives.find((s) => s.storage === input.storage);
-if (!shelf) {
-  throw new AppError(422, "We do not have shelf-life data for that crop and storage yet.");
-}
+  const shelf = crop.shelfLives.find((s) => s.storage === input.storage);
+  if (!shelf) {
+    throw new AppError(422, "We do not have shelf-life data for that crop and storage yet.");
+  }
 
-  const harvestDate = new Date(`${input.harvestDate}T00:00:00.000Z`);
-  if (Number.isNaN(harvestDate.getTime())) throw new AppError(422, "Choose a valid harvest date.");
-  if (harvestDate > todayInHarare()) throw new AppError(422, "The harvest date cannot be in the future.");
-  const ageDays = Math.floor((todayInHarare().getTime() - harvestDate.getTime()) / 86_400_000);
-if (ageDays > shelf.days + 30) {
-  throw new AppError(422, "That harvest date looks too far back. Please check the date.");
-}
+  const harvestDate = parseDay(input.harvestDate);
+  assertHarvestDate(harvestDate, shelf.days);
 
   const created = await prisma.harvest.create({
     data: {
@@ -123,4 +133,55 @@ export async function getHarvest(ownerId: string, id: string) {
   const row = await prisma.harvest.findFirst({ where: { id, farm: { ownerId } }, include });
   if (!row) throw new AppError(404, "Harvest not found."); // 404, not 403: do not reveal other farmers' records
   return present(row);
+}
+
+export async function updateHarvest(ownerId: string, id: string, input: UpdateHarvestInput) {
+  const row = await prisma.harvest.findFirst({
+    where: { id, status: "ACTIVE", farm: { ownerId } },
+    include,
+  });
+  if (!row) throw new AppError(404, "Harvest not found.");
+
+  // Never let an edit silently break a commitment to a buyer.
+  const promised = row.reservedKg.plus(row.soldKg);
+  if (input.quantityKg !== undefined && promised.greaterThan(input.quantityKg)) {
+    throw new AppError(
+      409,
+      `${promised.toNumber()} kg is already promised to buyers, so the quantity cannot be lower than that.`,
+    );
+  }
+
+  const nextStorage = input.storage ?? row.storage;
+  const shelf = row.crop.shelfLives.find((s) => s.storage === nextStorage);
+  if (!shelf) throw new AppError(422, "We do not have shelf-life data for that crop and storage yet.");
+
+  const nextDate = input.harvestDate ? parseDay(input.harvestDate) : row.harvestDate;
+  assertHarvestDate(nextDate, shelf.days);
+
+  const updated = await prisma.harvest.update({
+    where: { id },
+    data: {
+      ...(input.quantityKg !== undefined && { quantityKg: input.quantityKg }),
+      ...(input.harvestDate && { harvestDate: nextDate, availableFrom: nextDate }),
+      ...(input.storage && { storage: input.storage }),
+      ...(input.askingPricePerKg !== undefined && { askingPricePerKg: input.askingPricePerKg }),
+      ...(input.currency && { currency: input.currency }),
+      ...(input.notes !== undefined && { notes: input.notes }),
+    },
+    include,
+  });
+  return present(updated);
+}
+
+// One conditional update: only succeeds when nothing is reserved or sold.
+export async function withdrawHarvest(ownerId: string, id: string) {
+  const { count } = await prisma.harvest.updateMany({
+    where: { id, status: "ACTIVE", farm: { ownerId }, reservedKg: 0, soldKg: 0 },
+    data: { status: "WITHDRAWN" },
+  });
+  if (count === 1) return { id, status: "WITHDRAWN" as const };
+
+  const exists = await prisma.harvest.findFirst({ where: { id, status: "ACTIVE", farm: { ownerId } } });
+  if (!exists) throw new AppError(404, "Harvest not found.");
+  throw new AppError(409, "This harvest has produce promised to buyers, so it cannot be withdrawn.");
 }

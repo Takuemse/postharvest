@@ -6,6 +6,8 @@ import AppHome from "./pages/AppHome";
 import BuyerRegister from "./pages/BuyerRegister";
 import FarmerOnboarding from "./pages/FarmerOnboarding";
 import AddHarvest from "./pages/AddHarvest";
+import HarvestDetail from "./pages/HarvestDetail";
+import EditHarvest from "./pages/EditHarvest";
 
 function Protected({ children }: { children: ReactNode }) {
   const { session, role, loading } = useAuth();
@@ -25,6 +27,8 @@ export default function App() {
 
       <Route path="*" element={<Navigate to="/login" replace />} />
       <Route path="/harvests/new" element={<Protected><AddHarvest /></Protected>} />
+      <Route path="/harvests/:id" element={<Protected><HarvestDetail /></Protected>} />
+<Route path="/harvests/:id/edit" element={<Protected><EditHarvest /></Protected>} />
     </Routes>
   );
 }

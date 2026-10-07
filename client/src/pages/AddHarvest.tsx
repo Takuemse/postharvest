@@ -5,6 +5,7 @@ import { api, describeError } from "../lib/api";
 import {daysAgoInHarare, STORAGE_LABEL, todayInHarare } from "../lib/format";
 import { field, labelCls, primary } from "../lib/styles";
 import type { Crop, Storage } from "../lib/types";
+import { StorageField } from "../components/StorageField";
 
 const STORAGES: Storage[] = ["AMBIENT", "COOL", "REFRIGERATED"];
 
@@ -80,25 +81,18 @@ export default function AddHarvest() {
               value={date} onChange={(e) => setDate(e.target.value)} required />
         </div>
 
-        <fieldset>
-          <legend className={labelCls}>How is it stored?</legend>
-          <div className="grid gap-2">
-            {STORAGES.map((s) => (
-              <label key={s} className="block cursor-pointer">
-                <input type="radio" name="storage" className="peer sr-only" checked={storage === s} onChange={() => setStorage(s)} />
-                <span className="block rounded-[10px] border border-line bg-white/60 px-4 py-3 peer-checked:border-field peer-checked:bg-field/5 peer-checked:font-medium peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ripe">
-                  {STORAGE_LABEL[s]}
-                </span>
-              </label>
-            ))}
-          </div>
-          {crop && shelfDays && (
-            <p className="mt-3 text-sm text-ink/70">
-              {crop.name} keeps about <strong>{shelfDays} days</strong> in this storage. This is an estimate to help you
-              plan, not a food-safety guarantee.
-            </p>
-          )}
-        </fieldset>
+     <StorageField
+  value={storage}
+  onChange={setStorage}
+  hint={
+    crop && shelfDays ? (
+      <p className="mt-3 text-sm text-ink/70">
+        {crop.name} keeps about <strong>{shelfDays} days</strong> in this storage. This is an estimate to help you
+        plan, not a food-safety guarantee.
+      </p>
+    ) : null
+  }
+/>
 
         <div>
           <label className={labelCls} htmlFor="price">Asking price per kg (optional)</label>
