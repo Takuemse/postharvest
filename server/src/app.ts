@@ -10,6 +10,7 @@ import { demandRouter } from "./routes/demands";
 import { businessRouter } from "./routes/businesses"
 import { matchRouter } from "./routes/matches";
 import { orderRouter } from "./routes/orders";
+import { notificationRouter } from "./routes/notifications";
 import { errorHandler } from "./middleware/error";
 
 
@@ -32,6 +33,8 @@ app.use("/api/businesses", businessRouter);
 app.use("/api/matches", matchRouter);
 
 app.use("/api/orders", orderRouter);
+
+app.use("/api/notifications", notificationRouter);
 
 // ...after the 404 handler, at the very end:
 app.use(errorHandler);

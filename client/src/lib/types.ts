@@ -108,3 +108,12 @@ export type Order = {
   completedAt: string | null;
   cancelledAt: string | null;
 };
+export type AppNotification = {
+  id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  orderId: string | null;
+  readAt: string | null;
+  createdAt: string;
+};

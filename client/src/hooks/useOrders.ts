@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, describeError } from "../lib/api";
 import type { Order } from "../lib/types";
+import { useLiveVersion } from "../context/NotificationsContext";
 
 export const needsMe = (o: Order) => o.actions.some((a) => a === "confirm" || a === "ready" || a === "complete");
 
 export function useOrders() {
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const version = useLiveVersion();
 
   const load = useCallback(() => {
     api<Order[]>("/api/orders").then(setOrders).catch((e) => setError(describeError(e)));
@@ -14,7 +16,7 @@ export function useOrders() {
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, [load, version]);
 
   return { orders, error, reload: load };
 }

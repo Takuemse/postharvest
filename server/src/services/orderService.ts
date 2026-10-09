@@ -6,6 +6,14 @@ import { evaluateMatch } from "../utils/matching";
 import { allowedActions, contactVisible, holdsStock, type Side } from "../utils/orderRules";
 import { demandFacts, harvestFacts, harvestInclude } from "./matchingService";
 import type { CreateOrderInput } from "../validators/order";
+import { notify } from "./notificationService";
+
+const other = (s: Side): Side => (s === "FARMER" ? "BUYER" : "FARMER");
+const nameOf = (o: OrderRow, s: Side) => (s === "FARMER" ? o.farm.name : o.business.name);
+const ownerOf = (o: OrderRow, s: Side) => (s === "FARMER" ? o.farm.ownerId : o.business.ownerId);
+const cropsOf = (o: OrderRow) => o.items.map((i) => i.harvest.crop.name).join(", ");
+const kgOf = (o: OrderRow) =>
+  `${o.items.reduce((s, i) => s.plus(i.quantityKg), new Prisma.Decimal(0)).toNumber()} kg`;
 
 const TX = { maxWait: 10_000, timeout: 30_000 };
 
@@ -133,26 +141,33 @@ export async function createOrder(userId: string, side: Side, input: CreateOrder
     },
   });
   if (duplicate) throw new AppError(409, "There is already an open order for this match.");
-
-  const created = await prisma.order.create({
-    data: {
-      businessId: demand.businessId,
-      farmId: harvest.farmId,
-      demandId: demand.id,
-      initiatedBy: side,
-      items: {
-        create: {
-          harvestId: harvest.id,
-          quantityKg: qty,
-          pricePerKg: harvest.askingPricePerKg, // copied: a later price edit cannot change this order
-          currency: harvest.currency,
+  const created = await prisma.$transaction(async (tx) => {
+    const order = await tx.order.create({
+      data: {
+        businessId: demand.businessId,
+        farmId: harvest.farmId,
+        demandId: demand.id,
+        initiatedBy: side,
+        items: {
+          create: {
+            harvestId: harvest.id,
+            quantityKg: qty,
+            pricePerKg: harvest.askingPricePerKg, // copied: a later price edit cannot change this order
+            currency: harvest.currency,
+          },
         },
       },
-    },
-    include,
-  });
+      include,
+    });
+    const notice =
+      side === "BUYER"
+        ? { title: `${nameOf(order, "BUYER")} wants ${kgOf(order)} of your ${cropsOf(order)}`, body: "Confirm to reserve it." }
+        : { title: `${nameOf(order, "FARMER")} can supply ${kgOf(order)} of ${cropsOf(order)}`, body: "Confirm to reserve it for your request." };
+    await notify(tx, { profileId: ownerOf(order, other(side)), type: "ORDER_REQUESTED", orderId: order.id, ...notice });
+    return order;
+  }, TX);
   return present(created, side);
-}
+} // <--- Added missing closing brace here
 
 export async function confirmOrder(userId: string, id: string) {
   // Reads and checks happen first, outside the transaction. The conditional updates
@@ -205,6 +220,13 @@ export async function confirmOrder(userId: string, id: string) {
       const left = demand.quantityKg.minus(demand.fulfilledKg).toNumber();
       throw new AppError(409, `That request now only needs ${left} kg.`);
     }
+        await notify(tx, {
+      profileId: ownerOf(o, other(side)),
+      type: "ORDER_CONFIRMED",
+      orderId: id,
+      title: `${nameOf(o, side)} confirmed ${kgOf(o)} of ${cropsOf(o)}`,
+      body: "The stock is reserved and contact details are now visible.",
+    });
   }, TX);
   return getOrder(userId, id);
 }
@@ -235,6 +257,34 @@ export async function completeOrder(userId: string, id: string) {
         throw new AppError(409, "Stock records do not match. Please contact support.");
       }
     }
+        await notify(tx, {
+      profileId: ownerOf(o, "FARMER"),
+      type: "ORDER_COMPLETED",
+      orderId: id,
+      title: `${nameOf(o, "BUYER")} received ${kgOf(o)} of ${cropsOf(o)}`,
+    });
+  }, TX);
+  return getOrder(userId, id);
+}
+
+export async function readyOrder(userId: string, id: string) {
+  const { o, side } = await load(id, userId);
+  if (!allowedActions(o.status, side, starter(o)).includes("ready")) {
+    throw new AppError(409, "This order cannot be marked ready.");
+  }
+  await prisma.$transaction(async (tx) => {
+    const r = await tx.order.updateMany({
+      where: { id, status: "CONFIRMED" },
+      data: { status: "READY", readyAt: new Date() },
+    });
+    if (r.count === 0) throw changed();
+    await notify(tx, {
+      profileId: ownerOf(o, "BUYER"),
+      type: "ORDER_READY",
+      orderId: id,
+      title: `${nameOf(o, "FARMER")} marked ${kgOf(o)} of ${cropsOf(o)} ready`,
+      body: "Mark it received once you have it.",
+    });
   }, TX);
   return getOrder(userId, id);
 }
@@ -253,6 +303,18 @@ export async function cancelOrder(userId: string, id: string, kind: "cancel" | "
       data: { status: "CANCELLED", cancelledAt: new Date(), cancelReason: text },
     });
     if (claimed.count === 0) throw changed();
+
+    const actor = nameOf(o, side);
+    await notify(tx, {
+      profileId: ownerOf(o, other(side)),
+      type: "ORDER_CANCELLED",
+      orderId: id,
+      title:
+        kind === "decline"
+          ? `${actor} declined ${kgOf(o)} of ${cropsOf(o)}`
+          : `${actor} cancelled the order for ${kgOf(o)} of ${cropsOf(o)}`,
+      body: reason || null,
+    });
 
     if (!holdsStock(previous)) return; // a pending request reserved nothing
 
