@@ -12,7 +12,7 @@ import {
 
 const MAX_RESULTS = 20;
 
-const harvestInclude = {
+export const harvestInclude = {
   crop: { include: { shelfLives: true } },
   farm: { include: { location: true } },
 } satisfies Prisma.HarvestInclude;
@@ -30,7 +30,7 @@ const DISTANCE_TEXT: Record<Distance, string> = {
   OTHER_PROVINCE: "Different province, about 2 days of travel",
 };
 
-function harvestFacts(h: HarvestRow): HarvestFacts | null {
+export function harvestFacts(h: HarvestRow): HarvestFacts | null {
   const shelf = h.crop.shelfLives.find((s) => s.storage === h.storage);
   const availableKg = h.quantityKg.minus(h.reservedKg).minus(h.soldKg).toNumber();
   if (!shelf || availableKg <= 0) return null;
@@ -46,7 +46,7 @@ function harvestFacts(h: HarvestRow): HarvestFacts | null {
   };
 }
 
-function demandFacts(d: {
+export function demandFacts(d: {
   neededBy: Date;
   quantityKg: Prisma.Decimal;
   fulfilledKg: Prisma.Decimal;
@@ -123,8 +123,17 @@ export async function matchesForHarvest(ownerId: string, harvestId: string) {
       reasons: farmerReasons(m, hf, df),
     });
   }
-  return results.sort((a, b) => b.score - a.score || a.neededBy.localeCompare(b.neededBy)).slice(0, MAX_RESULTS);
-}
+    const sorted = results.sort((a, b) => b.score - a.score || a.neededBy.localeCompare(b.neededBy)).slice(0, MAX_RESULTS);
+  const open = await prisma.order.findMany({
+    where: {
+      status: { in: ["REQUESTED", "CONFIRMED", "READY"] },
+      items: { some: { harvestId } },
+      demandId: { in: sorted.map((r) => r.demandId) },
+    },
+    select: { id: true, demandId: true },
+  });
+  const byDemand = new Map(open.map((o) => [o.demandId, o.id]));
+  return sorted.map((r) => ({ ...r, openOrderId: byDemand.get(r.demandId) ?? null }));}
 
 // Buyer view: harvests that could fill this request. Never exposes the farmer's urgency or contact details.
 export async function matchesForDemand(ownerId: string, demandId: string) {
@@ -165,5 +174,16 @@ export async function matchesForDemand(ownerId: string, demandId: string) {
       reasons: buyerReasons(m, df),
     });
   }
-  return results.sort((a, b) => b.score - a.score).slice(0, MAX_RESULTS);
+   const sorted = results.sort((a, b) => b.score - a.score).slice(0, MAX_RESULTS);
+  const open = await prisma.order.findMany({
+    where: {
+      demandId,
+      status: { in: ["REQUESTED", "CONFIRMED", "READY"] },
+      items: { some: { harvestId: { in: sorted.map((r) => r.harvestId) } } },
+    },
+    select: { id: true, items: { select: { harvestId: true } } },
+  });
+  const byHarvest = new Map<string, string>();
+  for (const o of open) for (const i of o.items) byHarvest.set(i.harvestId, o.id);
+  return sorted.map((r) => ({ ...r, openOrderId: byHarvest.get(r.harvestId) ?? null }));
 }

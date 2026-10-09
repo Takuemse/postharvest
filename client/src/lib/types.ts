@@ -62,6 +62,7 @@ export type FarmerMatch = {
   matchedKg: number;
   score: number;
   fit: Fit;
+  openOrderId: string | null;
   coversAll: boolean;
   delivery: Delivery;
   daysLeftAtDelivery: number;
@@ -78,8 +79,32 @@ export type BuyerMatch = {
   matchedKg: number;
   score: number;
   fit: Fit;
+  openOrderId: string | null;
   coversAll: boolean;
   delivery: Delivery;
   daysLeftAtDelivery: number;
   reasons: string[];
+};
+
+export type OrderStatus = "REQUESTED" | "CONFIRMED" | "READY" | "COMPLETED" | "CANCELLED";
+export type OrderAction = "confirm" | "decline" | "cancel" | "ready" | "complete";
+
+export type Order = {
+  id: string;
+  status: OrderStatus;
+  mySide: "FARMER" | "BUYER";
+  iStarted: boolean;
+  counterpart: { name: string; town: string; contact: { name: string; phone: string | null } | null };
+  items: { harvestId: string; crop: string; quantityKg: number; pricePerKg: number | null; currency: "USD" | "ZWG" }[];
+  totalKg: number;
+  value: { amount: number; currency: "USD" | "ZWG" } | null;
+  actions: OrderAction[];
+  note: string | null;
+  deliverTo: string | null;
+  cancelReason: string | null;
+  createdAt: string;
+  confirmedAt: string | null;
+  readyAt: string | null;
+  completedAt: string | null;
+  cancelledAt: string | null;
 };

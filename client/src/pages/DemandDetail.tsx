@@ -83,7 +83,7 @@ export default function DemandDetail() {
         )}
        
       </dl>
-       {open && <DemandMatches demandId={d.id} />}P89
+       {open && <DemandMatches demandId={d.id} />}
 
       {open && (
         <div className="mt-10 max-w-xl">

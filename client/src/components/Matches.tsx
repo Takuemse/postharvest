@@ -1,8 +1,9 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type FormEvent, type ReactNode } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Check, Circle, CircleDot } from "lucide-react";
 import { api, describeError } from "../lib/api";
 import { formatDay, kg, STORAGE_LABEL } from "../lib/format";
-import type { BuyerMatch, FarmerMatch, Fit } from "../lib/types";
+import type { BuyerMatch, FarmerMatch, Fit, Order } from "../lib/types";
 
 const FIT = {
   STRONG: { label: "Strong fit", cls: "bg-field text-paper", Icon: Check },
@@ -49,6 +50,59 @@ function Reasons({ items }: { items: string[] }) {
 
 const card = "rounded-xl border border-line bg-white/50 p-4";
 
+function OrderStart({ harvestId, demandId, maxKg, openOrderId, label }: {
+  harvestId: string; demandId: string; maxKg: number; openOrderId: string | null; label: string;
+}) {
+  const navigate = useNavigate();
+  const id = useId();
+  const [qty, setQty] = useState(String(maxKg));
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (openOrderId) {
+    return (
+      <Link to={`/orders/${openOrderId}`} className="mt-4 inline-block text-sm underline underline-offset-4">
+        View the open order
+      </Link>
+    );
+  }
+
+  async function start(e: FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      const order = await api<Order>("/api/orders", {
+        method: "POST",
+        body: JSON.stringify({ harvestId, demandId, quantityKg: Number(qty) }),
+      });
+      navigate(`/orders/${order.id}`);
+    } catch (err) {
+      setError(describeError(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form onSubmit={start} className="mt-4">
+      <div className="flex flex-wrap items-end gap-3">
+        <div>
+          <label htmlFor={id} className="mb-1 block text-xs text-ink/60">Quantity (kg)</label>
+          <input id={id} type="number" inputMode="decimal" min="0.01" max={maxKg} step="0.01" value={qty}
+            onChange={(e) => setQty(e.target.value)} required
+            className="h-11 w-32 rounded-[10px] border border-line bg-white/70 px-3 font-mono outline-none focus:border-field focus:ring-2 focus:ring-field/25" />
+        </div>
+        <button disabled={busy}
+          className="h-11 rounded-[10px] bg-field px-5 font-medium text-paper transition hover:bg-[#18301f] active:translate-y-px disabled:opacity-50">
+          {busy ? "Sending…" : label}
+        </button>
+      </div>
+      <p role="alert" aria-live="polite" className="mt-2 min-h-5 text-sm font-medium text-ripe">{error}</p>
+    </form>
+  );
+}
+
 export function HarvestMatches({ harvestId }: { harvestId: string }) {
   const { items, error } = useList<FarmerMatch>(`/api/matches/harvests/${harvestId}`);
   return (
@@ -73,6 +127,7 @@ export function HarvestMatches({ harvestId }: { harvestId: string }) {
                 {kg(m.matchedKg)} <span className="font-sans text-sm text-ink/60">by {formatDay(m.neededBy)}</span>
               </p>
               <Reasons items={m.reasons} />
+              <OrderStart harvestId={harvestId} demandId={m.demandId} maxKg={m.matchedKg} openOrderId={m.openOrderId} label="Offer this" />
             </li>
           ))}
         </ul>
@@ -109,6 +164,7 @@ export function DemandMatches({ demandId }: { demandId: string }) {
                 {m.asking ? `${m.asking.pricePerKg} ${m.asking.currency} per kg` : "Price not set"}
               </p>
               <Reasons items={m.reasons} />
+              <OrderStart harvestId={m.harvestId} demandId={demandId} maxKg={m.matchedKg} openOrderId={m.openOrderId} label="Request this" />
             </li>
           ))}
         </ul>

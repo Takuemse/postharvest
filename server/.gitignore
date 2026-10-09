@@ -11,4 +11,6 @@ generated
 .claude/
 .windsurf/
 skills-lock.json
+server/scripts/dev-login.ps1
+server/scripts/oversell-test.ps1
 

@@ -10,6 +10,8 @@ import HarvestDetail from "./pages/HarvestDetail";
 import EditHarvest from "./pages/EditHarvest";
 import AddDemand from "./pages/AddDemand";
 import DemandDetail from "./pages/DemandDetail";
+import OrdersList from "./pages/OrdersList";
+import OrderDetail from "./pages/OrderDetail";
 
 function Protected({ children }: { children: ReactNode }) {
   const { session, role, loading } = useAuth();
@@ -33,6 +35,8 @@ export default function App() {
       <Route path="/harvests/:id/edit" element={<Protected><EditHarvest /></Protected>} />
       <Route path="/demands/new" element={<Protected><AddDemand /></Protected>} />
       <Route path="/demands/:id" element={<Protected><DemandDetail /></Protected>} />
+      <Route path="/orders" element={<Protected><OrdersList /></Protected>} />
+      <Route path="/orders/:id" element={<Protected><OrderDetail /></Protected>} />
     </Routes>
   );
 }
