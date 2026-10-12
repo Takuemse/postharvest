@@ -4,6 +4,7 @@ import { AppError } from "../middleware/error";
 import { daysUntil, demandState } from "../utils/demandStatus";
 import { todayInHarare } from "../utils/harvestStatus";
 import type { CreateDemandInput } from "../validators/demand";
+import { alertFarmersForDemand } from "./alertService";
 
 const MAX_LEAD_DAYS = 90; // keep in sync with the date limit in the client form
 
@@ -75,6 +76,8 @@ export async function createDemand(ownerId: string, input: CreateDemandInput) {
     },
     include,
   });
+  // Fire and forget: a failed alert must never fail the request being created.
+  void alertFarmersForDemand(created.id).catch((e) => console.error("Match alert failed", e));
   return present(created);
 }
 

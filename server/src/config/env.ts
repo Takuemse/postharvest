@@ -10,6 +10,7 @@ const schema = z.object({
   DIRECT_URL: z.string().min(1),
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 DB_SSL_CA: z.string().optional(), // Supabase CA certificate text, required in production
+  SWEEP_INTERVAL_MINUTES: z.coerce.number().int().min(1).default(360),
 });
 
 export const env = schema.parse(process.env);

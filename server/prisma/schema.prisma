@@ -310,3 +310,13 @@ model Notification {
   @@index([profileId, readAt, createdAt])
   @@map("notifications")
 }
+// ───────────── Alert deduplication ─────────────
+
+// One row per alert ever sent. The primary key makes the database the judge of "first time",
+// so a restart or a second server can never resend. Keys: match:{harvestId}:{demandId}, sellsoon:{harvestId}
+model AlertSent {
+  key       String   @id
+  createdAt DateTime @default(now())
+
+  @@map("alerts_sent")
+}

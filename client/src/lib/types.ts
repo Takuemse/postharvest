@@ -113,7 +113,7 @@ export type AppNotification = {
   type: string;
   title: string;
   body: string | null;
-  orderId: string | null;
+  href: string | null;
   readAt: string | null;
   createdAt: string;
 };

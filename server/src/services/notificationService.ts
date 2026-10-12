@@ -7,15 +7,33 @@ export function notify(
   db: Db,
   n: {
     profileId: string;
-    type: "ORDER_REQUESTED" | "ORDER_CONFIRMED" | "ORDER_READY" | "ORDER_COMPLETED" | "ORDER_CANCELLED";
+    type:
+      | "ORDER_REQUESTED"
+      | "ORDER_CONFIRMED"
+      | "ORDER_READY"
+      | "ORDER_COMPLETED"
+      | "ORDER_CANCELLED"
+      | "DEMAND_MATCH"
+      | "HARVEST_AT_RISK";
     title: string;
     body?: string | null;
-    orderId: string;
+    orderId?: string;
+    harvestId?: string;
   },
 ) {
+  const data: Record<string, string> = {};
+  if (n.orderId) data.orderId = n.orderId;
+  if (n.harvestId) data.harvestId = n.harvestId;
   return db.notification.create({
-    data: { profileId: n.profileId, type: n.type, title: n.title, body: n.body ?? null, data: { orderId: n.orderId } },
+    data: { profileId: n.profileId, type: n.type, title: n.title, body: n.body ?? null, data },
   });
+}
+
+function hrefOf(data: unknown): string | null {
+  const d = data as { orderId?: string; harvestId?: string } | null;
+  if (d?.orderId) return `/orders/${d.orderId}`;
+  if (d?.harvestId) return `/harvests/${d.harvestId}`;
+  return null;
 }
 
 export async function listNotifications(userId: string) {
@@ -30,7 +48,7 @@ export async function listNotifications(userId: string) {
       type: n.type,
       title: n.title,
       body: n.body,
-      orderId: (n.data as { orderId?: string } | null)?.orderId ?? null,
+      href: hrefOf(n.data),
       readAt: n.readAt,
       createdAt: n.createdAt,
     })),

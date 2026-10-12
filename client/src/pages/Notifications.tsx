@@ -22,7 +22,7 @@ export default function Notifications() {
           {items.map((n) => (
             <li key={n.id}>
               <Link
-                to={n.orderId ? `/orders/${n.orderId}` : "/app"}
+                to={n.href ?? "/app"}
                 onClick={() => void markRead(n.id)}
                 className={`block border-l-4 px-5 py-4 transition hover:bg-white/70 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ripe ${
                   n.readAt ? "border-line" : "border-field bg-field/5"

@@ -34,8 +34,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             <p className="font-medium">{toast.title}</p>
             {toast.body && <p className="mt-1 text-sm text-ink/70">{toast.body}</p>}
             <div className="mt-3 flex gap-4 text-sm">
-              {toast.orderId && (
-                <Link to={`/orders/${toast.orderId}`} className="underline underline-offset-4"
+                {toast.href && (
+                <Link to={toast.href} className="underline underline-offset-4"
                   onClick={() => { void markRead(toast.id); dismissToast(); }}>
                   View
                 </Link>
