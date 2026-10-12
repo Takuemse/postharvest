@@ -18,3 +18,6 @@ function Login-Farmer($phone, $code) {
 $bh   = Login-Buyer "buyer2@test.com" "LongTestPass123"
 $auth = Login-Farmer "+263770000001" "123456"
 "Logged in: `$bh (buyer) and `$auth (farmer) are ready."
+
+$hf = @{ apikey = $KEY; Authorization = $auth.Authorization }   # farmer, as the browser would send it
+$hb = @{ apikey = $KEY; Authorization = $bh.Authorization }     # buyer
