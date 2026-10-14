@@ -117,3 +117,21 @@ export type AppNotification = {
   readAt: string | null;
   createdAt: string;
 };
+
+export type SupplyItem = {
+  harvestId: string;
+  crop: { id: number; name: string };
+  farm: { name: string; town: string };
+  availableKg: number;
+  harvestDate: string;
+  storage: Storage;
+  asking: { pricePerKg: number; currency: "USD" | "ZWG" } | null;
+};
+
+export type SupplyPage = {
+  items: SupplyItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+};

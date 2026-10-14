@@ -13,6 +13,7 @@ import DemandDetail from "./pages/DemandDetail";
 import OrdersList from "./pages/OrdersList";
 import OrderDetail from "./pages/OrderDetail";
 import Notifications from "./pages/Notifications";
+import Marketplace from "./pages/Marketplace";
 
 function Protected({ children }: { children: ReactNode }) {
   const { session, role, loading } = useAuth();
@@ -39,6 +40,7 @@ export default function App() {
       <Route path="/orders" element={<Protected><OrdersList /></Protected>} />
       <Route path="/orders/:id" element={<Protected><OrderDetail /></Protected>} />
       <Route path="/notifications" element={<Protected><Notifications /></Protected>} />
+            <Route path="/marketplace" element={<Protected><Marketplace /></Protected>} />
     </Routes>
   );
 }

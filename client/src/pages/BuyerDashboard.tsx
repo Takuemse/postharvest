@@ -25,7 +25,9 @@ const headline =
       >
         <Plus size={18} aria-hidden="true" /> Request produce
       </Link>
-
+             <Link to="/marketplace" className="mb-6 inline-block text-sm underline underline-offset-4 md:mb-8 md:ml-5">
+        Browse available produce →
+      </Link>
       {demands && (
         <div className="mb-8">
           <h1 className="font-display text-4xl leading-[1.05] font-medium md:text-6xl">{headline}</h1>

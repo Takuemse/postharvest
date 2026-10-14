@@ -11,6 +11,7 @@ import { businessRouter } from "./routes/businesses"
 import { matchRouter } from "./routes/matches";
 import { orderRouter } from "./routes/orders";
 import { notificationRouter } from "./routes/notifications";
+import { marketplaceRouter } from "./routes/marketplace";
 import { errorHandler } from "./middleware/error";
 
 
@@ -35,6 +36,8 @@ app.use("/api/matches", matchRouter);
 app.use("/api/orders", orderRouter);
 
 app.use("/api/notifications", notificationRouter);
+
+app.use("/api/marketplace", marketplaceRouter);
 
 // ...after the 404 handler, at the very end:
 app.use(errorHandler);

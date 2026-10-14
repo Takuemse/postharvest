@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { AppShell } from "../components/AppShell";
 import { LocationSelect } from "../components/LocationSelect";
 import { useLocations } from "../hooks/useLocations";
@@ -8,13 +8,16 @@ import { daysFromNowInHarare, todayInHarare } from "../lib/format";
 import { field, labelCls, primary } from "../lib/styles";
 import type { Business, Crop } from "../lib/types";
 
+
 export default function AddDemand() {
   const navigate = useNavigate();
   const { locations } = useLocations();
   const [crops, setCrops] = useState<Crop[]>([]);
   const [businesses, setBusinesses] = useState<Business[]>([]);
-  const [cropId, setCropId] = useState("");
-  const [quantity, setQuantity] = useState("");
+  const [params] = useSearchParams();
+  const prefillKg = Number(params.get("quantityKg"));
+  const [cropId, setCropId] = useState(/^\d+$/.test(params.get("cropId") ?? "") ? params.get("cropId")! : "");
+  const [quantity, setQuantity] = useState(prefillKg > 0 ? String(prefillKg) : "");
   const [neededBy, setNeededBy] = useState(daysFromNowInHarare(3));
   const [locationId, setLocationId] = useState("");
   const [price, setPrice] = useState("");
