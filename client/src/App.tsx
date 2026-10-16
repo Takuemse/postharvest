@@ -14,6 +14,7 @@ import OrdersList from "./pages/OrdersList";
 import OrderDetail from "./pages/OrderDetail";
 import Notifications from "./pages/Notifications";
 import Marketplace from "./pages/Marketplace";
+import AdminUsers from "./pages/AdminUsers";
 
 function Protected({ children }: { children: ReactNode }) {
   const { session, role, loading } = useAuth();
@@ -22,7 +23,11 @@ function Protected({ children }: { children: ReactNode }) {
   if (!role) return <Navigate to="/onboarding/farmer" replace />; // signed in, no role yet
   return <>{children}</>;
 }
-
+// UI convenience only: the server is the real boundary.
+function OnlyRole({ roles, children }: { roles: Role[]; children: ReactNode }) {
+  const { role } = useAuth();
+  return role && roles.includes(role) ? <>{children}</> : <Navigate to="/app" replace />;
+}
 export default function App() {
   return (
     <Routes>
@@ -40,7 +45,8 @@ export default function App() {
       <Route path="/orders" element={<Protected><OrdersList /></Protected>} />
       <Route path="/orders/:id" element={<Protected><OrderDetail /></Protected>} />
       <Route path="/notifications" element={<Protected><Notifications /></Protected>} />
-            <Route path="/marketplace" element={<Protected><Marketplace /></Protected>} />
+                  <Route path="/marketplace" element={<Protected><OnlyRole roles={["BUYER"]}><Marketplace /></OnlyRole></Protected>} />
+                  <Route path="/admin/users" element={<Protected><OnlyRole roles={["ADMIN"]}><AdminUsers /></OnlyRole></Protected>} />
     </Routes>
   );
 }

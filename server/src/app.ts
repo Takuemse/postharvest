@@ -11,6 +11,7 @@ import { businessRouter } from "./routes/businesses"
 import { matchRouter } from "./routes/matches";
 import { orderRouter } from "./routes/orders";
 import { notificationRouter } from "./routes/notifications";
+import { adminRouter } from "./routes/admin";
 import { marketplaceRouter } from "./routes/marketplace";
 import { errorHandler } from "./middleware/error";
 
@@ -36,6 +37,8 @@ app.use("/api/matches", matchRouter);
 app.use("/api/orders", orderRouter);
 
 app.use("/api/notifications", notificationRouter);
+
+app.use("/api/admin", adminRouter);
 
 app.use("/api/marketplace", marketplaceRouter);
 

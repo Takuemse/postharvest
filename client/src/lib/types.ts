@@ -135,3 +135,30 @@ export type SupplyPage = {
   pageSize: number;
   hasMore: boolean;
 };
+
+export type AdminOverview = {
+  people: { farmers: number; buyers: number; admins: number; suspended: number };
+  supply: { harvestsWithStock: number; availableKg: number };
+  demand: { openRequests: number; neededKg: number };
+  orders: { status: OrderStatus; orders: number; kg: number }[];
+};
+
+export type AdminUser = {
+  id: string;
+  role: "FARMER" | "BUYER" | "ADMIN";
+  fullName: string;
+  phone: string | null;
+  email: string | null;
+  isActive: boolean;
+  createdAt: string;
+  place: { name: string; town: string } | null;
+  suspension: { reason: string; at: string } | null;
+};
+
+export type AdminUsersPage = {
+  items: AdminUser[];
+  total: number;
+  page: number;
+  pageSize: number;
+  hasMore: boolean;
+};

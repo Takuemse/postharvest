@@ -320,3 +320,21 @@ model AlertSent {
 
   @@map("alerts_sent")
 }
+
+// ───────────── Admin audit trail ─────────────
+
+// Who changed what, and why. Actions so far: SUSPEND_USER, REACTIVATE_USER.
+// adminId and targetId are plain ids (no foreign keys) so the record outlives any account.
+model AdminAction {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  adminId   String   @db.Uuid
+  action    String
+  targetId  String?  @db.Uuid
+  reason    String
+  details   Json?
+  createdAt DateTime @default(now())
+
+  @@index([targetId, createdAt])
+  @@index([adminId, createdAt])
+  @@map("admin_actions")
+}
